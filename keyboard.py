@@ -107,7 +107,7 @@ def initialize_individual(genome: str, fitness: int) -> Individual:
     Calls:          ?
     Example doctest:
     """
-    print('Delete this and write')
+    return {"genome": genome, "fitness": fitness}
 
 
 def initialize_pop(example_genome: str, pop_size: int) -> Population:
@@ -121,7 +121,52 @@ def initialize_pop(example_genome: str, pop_size: int) -> Population:
     Calls:          ?
     Example doctest:
     """
-    print("Delete this and write")
+    pop = []
+    for i in range(pop_size):
+        gen = random.sample(example_genome, len(example_genome))
+        temp = "".join(gen)
+        out = initialize_individual(temp, 0)
+        pop.append(out)
+    return pop
+
+
+def make_baby(genomeMom: str, genomeDad: str) -> str:
+    leng = len(genomeMom)
+    options = genomeMom
+    remove = []
+    temp = ["0"] * leng
+
+    # Determine if Left or right will be inherited
+    inherit_left = random.random() < 0.5
+
+    # Remove inherited characters from options
+    if inherit_left:
+        for i in range(15):
+            remove.append(genomeMom[i])
+    else:
+        for i in range(15, leng):
+            remove.append(genomeMom[i])
+
+    for i in remove:
+        options = options.replace(i, "")
+
+    # Add to temp
+    for i in range(leng):
+        # Add left or right side
+        if (inherit_left and i <= 14) or (not inherit_left and i > 14):
+            temp[i] = genomeMom[i]
+        elif genomeDad[i] in options:
+            # Add in place from other side
+            temp[i] = genomeDad[i]
+            options = options.replace(genomeDad[i], "")
+
+    output = ""
+    for i in range(leng):
+        if temp[i] == "0":
+            temp[i] = options[0]
+            options = options[1:]
+        output = output + temp[i]
+    return output
 
 
 def recombine_pair(parent1: Individual, parent2: Individual) -> Population:
@@ -135,7 +180,13 @@ def recombine_pair(parent1: Individual, parent2: Individual) -> Population:
     Calls:          ?
     Example doctest:
     """
-    print("Delete this and write")
+    firstBorn = initialize_individual(
+        make_baby(parent1["genome"], parent2["genome"]), 0
+    )
+    secondBorn = initialize_individual(
+        make_baby(parent2["genome"], parent1["genome"]), 0
+    )
+    return [firstBorn, secondBorn]
 
 
 def recombine_group(parents: Population, recombine_rate: float) -> Population:
@@ -150,7 +201,25 @@ def recombine_group(parents: Population, recombine_rate: float) -> Population:
     Modifies:       Nothing
     Calls:          ?
     """
-    print("Delete this and write")
+    output = []
+    i = 0
+    while i < len(parents) - 1:
+        if random.random() < recombine_rate:
+            temp = recombine_pair(parents[i], parents[i + 1])
+            output.append(temp[0])
+            output.append(temp[1])
+        else:
+            output.append(parents[i])
+            output.append(parents[i + 1])
+        i = i + 2
+    return output
+
+
+def list_swap(l: list, a: int, b: int) -> list:
+    temp = l[a]
+    l[a] = l[b]
+    l[b] = temp
+    return l
 
 
 def mutate_individual(parent: Individual, mutate_rate: float) -> Individual:
@@ -164,7 +233,26 @@ def mutate_individual(parent: Individual, mutate_rate: float) -> Individual:
     Calls:          ?
     Example doctest:
     """
-    print("Delete this and write")
+    preference_rate = 0.55
+    list_parent = list(parent["genome"])
+
+    for i in range(len(list_parent)):
+        if random.random() < mutate_rate:
+            left_swap = random.choice(range(15))
+            right_swap = random.choice(range(15, len(list_parent)))
+            if i <= 14:
+                if random.random() < preference_rate:
+                    list_parent = list_swap(list_parent, i, left_swap)
+                else:
+                    list_parent = list_swap(list_parent, i, right_swap)
+            else:
+                if random.random() < preference_rate:
+                    list_parent = list_swap(list_parent, i, right_swap)
+                else:
+                    list_parent = list_swap(list_parent, i, left_swap)
+
+    output = "".join(list_parent)
+    return initialize_individual(output, 0)
 
 
 def mutate_group(children: Population, mutate_rate: float) -> Population:
@@ -178,7 +266,11 @@ def mutate_group(children: Population, mutate_rate: float) -> Population:
     Calls:          ?
     Example doctest:
     """
-    print("Delete this and write")
+    pop = []
+    for i in children:
+        temp = mutate_individual(i, mutate_rate)
+        pop.append(temp)
+    return pop
 
 
 # DO NOT MODIFY >>>>
@@ -253,7 +345,9 @@ def evaluate_group(individuals: Population) -> None:
     Calls:          ?
     Example doctest:
     """
-    print("Delete this and write")
+    for i in individuals:
+        evaluate_individual(i)
+    return
 
 
 def rank_group(individuals: Population) -> None:
@@ -267,7 +361,9 @@ def rank_group(individuals: Population) -> None:
     Calls:          ?
     Example doctest:
     """
-    print("Delete this and write")
+    individuals[:] = sorted(individuals, key=lambda x: x["fitness"], reverse=False)
+    # print(individuals) #debug print
+    return
 
 
 def parent_select(individuals: Population, number: int) -> Population:
@@ -281,7 +377,11 @@ def parent_select(individuals: Population, number: int) -> Population:
     Calls:          ?
     Example doctest:
     """
-    print("Delete this and write")
+    weights = []
+    max = individuals[-1]["fitness"] + 1
+    for i in individuals:
+        weights.append(max - i["fitness"])
+    return random.choices(individuals, weights, k=number)
 
 
 def survivor_select(individuals: Population, pop_size: int) -> Population:
@@ -295,7 +395,7 @@ def survivor_select(individuals: Population, pop_size: int) -> Population:
     Calls:          ?
     Example doctest:
     """
-    print("Delete this and write")
+    return individuals[:pop_size]
 
 
 def evolve(example_genome: str, pop_size: int = 100) -> Population:
@@ -314,7 +414,19 @@ def evolve(example_genome: str, pop_size: int = 100) -> Population:
     # Type 's' to 'step' deeper
     # Type 'n' to 'next' over
     # Type 'f' or 'r' to finish/return a function call and go back to caller
-    print("Delete this and write")
+    population = initialize_pop(example_genome=example_genome, pop_size=pop_size)
+    evaluate_group(individuals=population)
+    rank_group(individuals=population)
+    for i in range(1000):
+        parents = parent_select(individuals=population, number=80)
+        children = recombine_group(parents=parents, recombine_rate=0.8)
+        mutate_rate = 0.2
+        mutants = mutate_group(children=children, mutate_rate=mutate_rate)
+        evaluate_group(individuals=mutants)
+        everyone = population + mutants
+        rank_group(individuals=everyone)
+        population = survivor_select(individuals=everyone, pop_size=pop_size)
+    return population
 
 
 # Seed for base grade.
