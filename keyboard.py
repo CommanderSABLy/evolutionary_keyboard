@@ -13,6 +13,7 @@ Do not edit the sections between these marks below.
 # %%
 import random
 from typing import TypedDict
+from typing import Any
 import math
 import json
 
@@ -133,7 +134,7 @@ def initialize_pop(example_genome: str, pop_size: int) -> Population:
 def make_baby(genomeMom: str, genomeDad: str) -> str:
     leng = len(genomeMom)
     options = genomeMom
-    remove = []
+    remove: list[str] = []
     temp = ["0"] * leng
 
     # Determine if Left or right will be inherited
@@ -142,13 +143,13 @@ def make_baby(genomeMom: str, genomeDad: str) -> str:
     # Remove inherited characters from options
     if inherit_left:
         for i in range(15):
-            remove.append(genomeMom[i])
+            remove.append(str(genomeMom[i]))
     else:
         for i in range(15, leng):
-            remove.append(genomeMom[i])
+            remove.append(str(genomeMom[i]))
 
-    for i in remove:
-        options = options.replace(i, "")
+    for a in remove:
+        options = options.replace(str(a), "")
 
     # Add to temp
     for i in range(leng):
@@ -215,7 +216,7 @@ def recombine_group(parents: Population, recombine_rate: float) -> Population:
     return output
 
 
-def list_swap(l: list, a: int, b: int) -> list:
+def list_swap(l: list[str], a: int, b: int) -> list[str]:
     temp = l[a]
     l[a] = l[b]
     l[b] = temp
